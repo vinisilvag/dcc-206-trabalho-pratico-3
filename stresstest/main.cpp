@@ -52,7 +52,9 @@ int main() { _
     return 0;
 }
 
-bool table_fit(pair<int, int> dimensions, pair<int, int> table) {
+bool table_fit(int max_area, pair<int, int> dimensions, pair<int, int> table) {
+    if(max_area < table.f * table.s) return false;
+
     if(table.f <= dimensions.f and  table.s <= dimensions.s) return true;
     else if(table.s <= dimensions.f and table.f <= dimensions.s) return true;
 
@@ -82,8 +84,6 @@ pair<int, int> find_largest_table(int n, int m, vector<vector<int>> &house, int 
                 else histogram[i][j] = histogram[i-1][j] + house[i][j];
             }
         }
-
-        // TODO: debug na função de calcular a maior área do histograma
 
         for(int k = 0; k < m; k++) {
             int last_width = INF;
@@ -117,18 +117,7 @@ pair<int, int> find_largest_table(int n, int m, vector<vector<int>> &house, int 
                 dimensions = { (m - start_pos), curr_height };
             }
         }
-
-        // cout << "partial: " << dimensions.f << " " << dimensions.s << endl;
     }
-
-    // cout << "final: " << dimensions.f << " " << dimensions.s << endl;
-
-    // for(int i = 0; i < n; i++) {
-    //     for(int j = 0; j < m; j++) {
-    //         cout << histogram[i][j] << " ";
-    //     }
-    //     cout << endl;
-    // }
 
     vector<pair<int, int>> ordered_tables(k);
 
@@ -139,7 +128,7 @@ pair<int, int> find_largest_table(int n, int m, vector<vector<int>> &house, int 
     sort(ordered_tables.begin(), ordered_tables.end(), sort_by_area_and_width);
 
     for(int i = 0; i < k; i++)
-        if(table_fit(dimensions, ordered_tables[i]))
+        if(table_fit(max_area, dimensions, ordered_tables[i]))
             return { ordered_tables[i].f, ordered_tables[i].s };
 
     return { -1, -1 };
