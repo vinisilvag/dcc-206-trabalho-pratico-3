@@ -13,6 +13,10 @@ using namespace std;
 
 const int INF = 0x3f3f3f3f;
 
+bool table_fits(pair<int, int> dimensions, pair<int, int> table);
+
+bool sort_by_area_and_width(const pair<int,int> &a, const pair<int,int> &b);
+
 pair<int, int> find_largest_table(int n, int m, vector<vector<int>> &house, int k, vector<pair<int, int>> &tables);
 
 int main() { _
@@ -37,7 +41,7 @@ int main() { _
 
     vector<pair<int, int>> tables(k);
 
-    for(int i = 0; i < k; i++){
+    for(int i = 0; i < k; i++) {
         int length, width;
 
         cin >> length >> width;
@@ -52,7 +56,7 @@ int main() { _
     return 0;
 }
 
-bool table_fit(pair<int, int> dimensions, pair<int, int> table) {
+bool table_fits(pair<int, int> dimensions, pair<int, int> table) {
     if(table.f <= dimensions.f and  table.s <= dimensions.s) return true;
     else if(table.s <= dimensions.f and table.f <= dimensions.s) return true;
 
@@ -70,9 +74,6 @@ pair<int, int> find_largest_table(int n, int m, vector<vector<int>> &house, int 
     vector<vector<int>> histogram(n, vector<int>(m, 0));
     pair<int, int> dimensions = { 0, 0 };
 
-    stack<int> position_stack, height_stack;
-    int max_area = 0;
-
     for(int i = 0; i < n; i++) {
         for(int j = 0; j < m; j++) {
             if(i == 0) {
@@ -83,52 +84,38 @@ pair<int, int> find_largest_table(int n, int m, vector<vector<int>> &house, int 
             }
         }
 
-        // TODO: debug na função de calcular a maior área do histograma
+        int max_area = 0;
+        stack<int> start_pos;
 
-        for(int k = 0; k < m; k++) {
-            int last_width = INF;
+        int k = 0;
+        while(k < m) {
+            if(start_pos.empty() || histogram[i][start_pos.top()] <= histogram[i][k]) {
+                start_pos.push(k); k++;
+            } else {
+                int curr_length = histogram[i][start_pos.top()]; start_pos.pop();
+                int curr_width = (start_pos.empty() ? k : k - start_pos.top() - 1);
 
-            while(!height_stack.empty() && height_stack.top() > histogram[i][k]) {
-                last_width = position_stack.top(); position_stack.pop();
-                int curr_height = height_stack.top(); height_stack.pop();
-
-                int curr_area = (k - last_width) * curr_height;
+                int curr_area = curr_width * curr_length;
 
                 if(curr_area > max_area) {
                     max_area = curr_area;
-                    dimensions = { (k - last_width), curr_height };
+                    dimensions = { curr_width, curr_length };
                 }
-            }
-
-            if(height_stack.empty() || height_stack.top() < histogram[i][k]) {
-                height_stack.push(histogram[i][k]);
-                position_stack.push(min(last_width, k));
             }
         }
 
-        while(!height_stack.empty()) {
-            int start_pos = position_stack.top(); position_stack.pop();
-            int curr_height = height_stack.top(); height_stack.pop();
+        while(!start_pos.empty()) {
+            int curr_length = histogram[i][start_pos.top()]; start_pos.pop();
+            int curr_width = (start_pos.empty() ? k : k - start_pos.top() - 1);
 
-            int curr_area = (m - start_pos) * curr_height;
+            int curr_area = curr_width * curr_length;
 
             if(curr_area > max_area) {
                 max_area = curr_area;
-                dimensions = { (m - start_pos), curr_height };
+                dimensions = { curr_width, curr_length };
             }
-        }
-
-        // cout << "partial: " << dimensions.f << " " << dimensions.s << endl;
+        } 
     }
-
-    // cout << "final: " << dimensions.f << " " << dimensions.s << endl;
-
-    // for(int i = 0; i < n; i++) {
-    //     for(int j = 0; j < m; j++) {
-    //         cout << histogram[i][j] << " ";
-    //     }
-    //     cout << endl;
-    // }
 
     vector<pair<int, int>> ordered_tables(k);
 
@@ -139,7 +126,7 @@ pair<int, int> find_largest_table(int n, int m, vector<vector<int>> &house, int 
     sort(ordered_tables.begin(), ordered_tables.end(), sort_by_area_and_width);
 
     for(int i = 0; i < k; i++)
-        if(table_fit(dimensions, ordered_tables[i]))
+        if(table_fits(dimensions, ordered_tables[i]))
             return { ordered_tables[i].f, ordered_tables[i].s };
 
     return { -1, -1 };
